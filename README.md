@@ -7,6 +7,8 @@ Software básico de tratamento de dados, via linha de comando. Desenvolvido como
 
 `Desenvolvido e testado em ambiente WSL2 no Windows 10, com container Postgres 12.2`
 
+![Screenshot](https://github.com/EricMGS/Simple-CLI-ETL/blob/main/screenshot.png)
+
 ### Sistema Operacional
 Linux
 
