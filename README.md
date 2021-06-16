@@ -59,7 +59,8 @@ CREATE TABLE public.macros
     username text COLLATE pg_catalog."default" NOT NULL,
     command text COLLATE pg_catalog."default" NOT NULL,
     command_name text COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT macros_pkey PRIMARY KEY (id)
+    CONSTRAINT macros_pkey PRIMARY KEY (id),
+    CONSTRAINT un_command_name UNIQUE (command_name)
 )
 
 TABLESPACE pg_default;
