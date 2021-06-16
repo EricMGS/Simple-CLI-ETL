@@ -37,7 +37,7 @@ Postgres 12.2
 ```
 CREATE TABLE public.login
 (
-    id integer serial,
+    id serial,
     username text COLLATE pg_catalog."default" NOT NULL,
     password text COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT login_pkey PRIMARY KEY (id),
@@ -54,7 +54,7 @@ ALTER TABLE public.login
 ```
 CREATE TABLE public.macros
 (
-    id integer serial,
+    id serial,
     username text COLLATE pg_catalog."default" NOT NULL,
     command text COLLATE pg_catalog."default" NOT NULL,
     command_name text COLLATE pg_catalog."default" NOT NULL,
