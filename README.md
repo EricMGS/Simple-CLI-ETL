@@ -18,6 +18,7 @@ Linux
 ## Dependências Python
 - xlrd
 - xlwt
+- lxml
 - pandas 
 - numpy
 - requests
