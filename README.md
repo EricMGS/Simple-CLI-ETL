@@ -69,6 +69,24 @@ ALTER TABLE public.macros
     OWNER to postgres;
 ```
 
+### savedtables
+```` 
+CREATE TABLE public.savedtables
+(
+    id serial,
+    username text COLLATE pg_catalog."default" NOT NULL,
+    table_html text COLLATE pg_catalog."default" NOT NULL,
+    table_name text COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT savedtables_pkey PRIMARY KEY (id),
+    CONSTRAINT un_tablename UNIQUE (table_name)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE public.savedtables
+    OWNER to postgres;
+```
+
 ## Execução
 Após ter todas dependências instaladas e o banco de dados rodando com as tabelas criadas, execute com python o arquivo `ui.py`
 
