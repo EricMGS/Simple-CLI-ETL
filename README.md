@@ -70,7 +70,7 @@ ALTER TABLE public.macros
 ```
 
 ### savedtables
-```` 
+```
 CREATE TABLE public.savedtables
 (
     id serial,
