@@ -9,6 +9,8 @@ from textwrap import dedent
 from login import Login
 from etl import ETL
 from macros import Macros
+from tables import Tables
+import pandas as pd
 import os, sys
 import edit
 
@@ -22,6 +24,7 @@ class UI():
         self.loginController = Login()
         self.etlController = ETL()
         self.macroController = Macros()
+        self.tableController = Tables()
         self.message = '' #envia uma mensagem para a próxima tela
 
     def start(self):
@@ -75,14 +78,119 @@ class UI():
 
             1 - Login
             2 - Cadastrar
-            3 - Sair
+            3 - Sobre
+            4 - Sair
             """
-        option = self.getOption(text, ['1','2', '3'], message)
+        option = self.getOption(text, ['1','2', '3','4'], message)
         if option == '1':
             self.menu = 'login'
         elif option == '2':
             self.menu = 'signup'
         elif option == '3':
+            self.clear()
+            print('''
+            Simple-CLI-ETL
+            Software básico de tratamento de dados, via linha de comando.
+            Desenvolvido como trabalho para a disciplina Tópicos Especiais em Informática.
+            ===================================================================================
+            
+            Desenvolvido e testado em ambiente WSL2 no Windows 10, com container Postgres 12.2
+
+            Sistema Operacional:
+            Linux
+
+            Versão Python:
+            3.8.5
+
+            Dependências Python:
+            - xlrd
+            - xlwt
+            - lxml
+            - pandas
+            - numpy
+            - requests
+            - pandassql
+            - urwid
+            - psycopg2
+            - Banco de dados
+            - Postgres 12.2
+            - host = localhost
+            - dbname = trabpython
+            - user = postgres
+            - password = root
+
+            Tabelas:
+            -----------------------------------------------------------------
+            LOGIN
+            
+            CREATE TABLE public.login
+            (
+                id serial,
+                username text COLLATE pg_catalog."default" NOT NULL,
+                password text COLLATE pg_catalog."default" NOT NULL,
+                CONSTRAINT login_pkey PRIMARY KEY (id),
+                CONSTRAINT un_username UNIQUE (username)
+            )
+
+            TABLESPACE pg_default;
+
+            ALTER TABLE public.login
+                OWNER to postgres;
+           -----------------------------------------------------------------
+            MACROS    
+            
+            CREATE TABLE public.macros
+            (
+                id serial,
+                username text COLLATE pg_catalog."default" NOT NULL,
+                command text COLLATE pg_catalog."default" NOT NULL,
+                command_name text COLLATE pg_catalog."default" NOT NULL,
+                CONSTRAINT macros_pkey PRIMARY KEY (id),
+                CONSTRAINT un_command_name UNIQUE (command_name)
+            )
+
+            TABLESPACE pg_default;
+        
+            ALTER TABLE public.macros
+                OWNER to postgres;
+            -----------------------------------------------------------------
+            SAVEDTABLES
+            
+            CREATE TABLE public.savedtables
+            (
+                id serial,
+                username text COLLATE pg_catalog."default" NOT NULL,
+                table_html text COLLATE pg_catalog."default" NOT NULL,
+                table_name text COLLATE pg_catalog."default" NOT NULL,
+                CONSTRAINT savedtables_pkey PRIMARY KEY (id),
+                CONSTRAINT un_tablename UNIQUE (table_name)
+            )
+
+            TABLESPACE pg_default;
+
+            ALTER TABLE public.savedtables
+                OWNER to postgres;
+            -----------------------------------------------------------------
+            
+            Execução:
+            Após ter todas dependências instaladas e o banco de dados rodando com as tabelas criadas,
+            execute com python o arquivo ui.py
+
+            Arquivos:
+            - ui.py: arquivo principal, contém toda a estrutura de telas, execução de funcionalidades e controle de erros
+            - macros.py: controlador da tabela macros do banco de dados
+            - login.py: controlador da tabela login do banco de dados
+            - etl.py: arquivo core das funcionalidades do software, realiza o carregamento de tabelas, transformação e extração
+            - edit.py: código para o editor de texto em tempo de execução
+            - edit.txt: texto salvo pelo editor
+
+
+
+            Eric Monteiro Galotti de Souza, 2021
+                        ''')
+
+            input('Tecle Enter para voltar...')
+        elif option == '4':
             self.clear()
             self.stop = True
     
@@ -229,9 +337,10 @@ class UI():
             2 - Carregar XLS
             3 - Carregar Json
             4 - Carregar Json da Web
-            5 - Voltar
+            5 - Carregar do banco
+            6 - Voltar
             """
-        option = self.getOption(text, ['1','2','3','4','5'], message)
+        option = self.getOption(text, ['1','2','3','4','5','6'], message)
         if option == '1':
             self.clear()
             file = input('Digite o caminho do arquivo: ')
@@ -287,6 +396,19 @@ class UI():
                 self.menu = 'main_logged'
                 self.setMessage('Tabela carregada')
         elif option == '5':
+            self.clear()
+            name = input('Digite o nome da tabela: ')
+            html = self.tableController.getTable(self.loginController.loggedUser, name)
+            if html == -1:
+                self.setMessage('Não existe tabela com esse nome')
+            else:
+                response = self.etlController.loadHTML(html)
+                if response == -4:
+                    self.setMessage('Impossível carregar a tabela')
+                elif response == 1:
+                    self.menu = 'main_logged'
+                    self.setMessage('Tabela carregada')
+        elif option == '6':
             self.menu = 'main_logged'
 
     def exportMenu(self, message):
@@ -296,9 +418,10 @@ class UI():
             1 - CSV
             2 - XLS
             3 - JSON
-            4 - Voltar
+            4 - Salvar no banco
+            5 - Voltar
             """
-        option = self.getOption(text, ['1','2','3','4'], message)
+        option = self.getOption(text, ['1','2','3','4','5'], message)
         if option == '1':
             self.clear()
             path = input('Digite o caminho do arquivo: ')
@@ -337,6 +460,26 @@ class UI():
                 self.menu = 'main_logged'
                 self.setMessage('Tabela exportada')
         elif option == '4':
+            self.clear()
+            name = input('Digite o nome da tabela: ')
+            response = self.tableController.getTable(self.loginController.loggedUser, name)
+            if response == -1: #tabela não exite, criar
+                try:
+                    html = self.etlController.table.to_html()
+                    self.tableController.createTable(self.loginController.loggedUser, name, html)
+                    self.menu = 'main_logged'
+                    self.setMessage('Tabela exportada')
+                except:
+                    self.setMessage('Impossível criar tabela')
+            else: #tabela existe, atualizar
+                try:
+                    html = self.etlController.table.to_html()
+                    self.tableController.updateTable(self.loginController.loggedUser, name, html)
+                    self.menu = 'main_logged'
+                    self.setMessage('Tabela exportada')
+                except:
+                    self.setMessage('Impossível atualizar tabela')
+        elif option == '5':
             self.menu = 'main_logged'
 
     def commandsMenu(self, message):

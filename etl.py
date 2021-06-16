@@ -73,6 +73,14 @@ class ETL():
         except:
             return -7 #impossível carregar conteúdo
 
+    def loadHTML(self, html:str) -> int:
+        try:
+            self.table = pd.read_html(html)[0]
+            self.table = self.table.replace(np.nan, '', regex=True)
+            return 1 #arquivo aberto com sucesso
+        except:
+            return -4 #impossível abrir o arquivo
+
     def showTable(self):
         if type(self.table) != pd.DataFrame:
             return -5 #tabela não carregada
@@ -85,7 +93,7 @@ class ETL():
         if len(separator) != 1:
             return -3 #separador inválido
         try:
-            self.table.to_csv(path, encoding=encoding, sep=separator)
+            self.table.to_csv(path+'.zip', encoding=encoding, sep=separator, compression='zip')
             return 3 #arquivo exportado com sucesso
         except:
             return -8 #impossível exportar o arquivo
@@ -99,10 +107,11 @@ class ETL():
 
     def exportJSON(self, path):
         try:
-            self.table.to_json(path)
+            self.table.to_json(path+'.zip', compression='zip')
             return 3 #arquivo exportado com sucesso
         except:
             return -8 #impossível exportar o arquivo
+
 
     def query(self, q):
         tabela = self.table
